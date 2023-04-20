@@ -16,7 +16,7 @@ import logger from './logger';
 import deserializeUser from '@middlewares/deserializeUser';
 
 export async function createServer(): Promise<Express> {
-  const yamlSpecFile = './config/openapi.yml';
+  const yamlSpecFile = './src/config/openapi.yml';
   const apiDefinition = YAML.load(yamlSpecFile);
   logger.info('-----');
   logger.info('CONFIG', config);

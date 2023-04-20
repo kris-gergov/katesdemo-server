@@ -1,3 +1,7 @@
 node_modules
-config
 coverage
+.env.defaults
+.env.dev
+.env.prod
+.env.test
+.env.schema

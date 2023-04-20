@@ -1,0 +1,792 @@
+  openapi: 3.0.3
+  info:
+    title: Kate Cleaning Services backend
+    description: Kate Cleaning Services backend API declaration
+    termsOfService: http://swagger.io/terms/
+    contact:
+      email: krisgergov@gmail.com
+    license:
+      name: MIT
+      url: https://opensource.org/licenses/MIT
+    version: 1.0.0
+  externalDocs:
+    description: Find out more about Swagger
+    url: http://swagger.io
+  servers:
+    - url: /api/v1
+  
+  tags:
+    - name: greeting
+      description: Greeting APIs
+    - name: user
+      description: User APIs
+    - name: shift
+      description: Shift APIs
+    - name: session
+      description: Session APIs
+  
+  paths:
+    /hello:
+      get:
+        description: Returns 'Hello <name>/stranger!!!' to the caller
+        tags:
+          - greeting
+        operationId: hello
+        parameters:
+          - name: name
+            required: false
+            in: query
+            description: The name of a caller
+            schema:
+              type: string
+        responses:
+          200:
+            description: Success
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/HelloResponse'
+    /goodbye:
+      get:
+        description: Returns 'Goodbye \<name\>!!!' to the authenticated caller
+        tags:
+          - greeting
+        operationId: goodbye # we’ll implement goodbye function in controllers to make it handle GET /goodbye requests
+        security: # property that specifies a list of authentications for the request
+          - bearerAuth: [] #  In our case, it is a single bearerAuth with the definition in the components section
+        responses:
+          200:
+            description: Success
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/HelloResponse' # we reuse HelloResponse from GET /hello
+    /login:
+      post:
+        summary: Login
+        tags:
+          - user
+        operationId: login
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - email
+                  - password
+                properties:
+                  email:
+                    type: string
+                    format: email
+                  password:
+                    type: string
+        responses:
+          200:
+            description: Success
+            headers:
+              X-Expires-After:
+                description: date in UTC when token expires
+                required: true
+                schema:
+                  type: string
+                  format: date-time
+            content:
+              application/json:
+                schema:
+                  type: object
+                  additionalProperties: false
+                  required:
+                    - userId
+                  properties:
+                    userId:
+                      type: string
+                    token:
+                      type: string
+                      format: '^[A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.?[A-Za-z0-9-_.+/=]*$'
+          404:
+            description: Invalid Login/Password
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/FailResponse'
+          500:
+            description: Internal Server Error
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/FailResponse'
+    /user:
+      post:
+        summary: Create user
+        tags:
+          - user
+        operationId: createUser
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - email
+                  - password
+                  - name
+                  - type
+                properties:
+                  email:
+                    type: string
+                    format: email
+                  password:
+                    type: string
+                    format: password
+                  name:
+                    type: string
+                  phone:
+                    type: string
+                  address:
+                    type: object
+                    properties:
+                      street:
+                        type: string
+                      city:
+                        type: string
+                      postcode:
+                        type: string
+                  deposit:
+                    type: number
+                  active:
+                    type: boolean
+                  type:
+                    type: string
+                    enum:
+                      - client
+                      - cleaner
+                      - admin
+        responses:
+          201:
+            description: Success
+            content:
+              application/json:
+                schema:
+                  type: object
+                  additionalProperties: false
+                  required:
+                    - userId
+                  properties:
+                    userId:
+                      type: string
+          409:
+            description: Conflict
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/FailResponse'
+          500:
+            description: Internal Server Error
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/FailResponse'
+      get:
+        summary: Get all users
+        tags:
+          - user
+        operationId: getUsers
+        responses:
+          200:
+            description: Success
+            content:
+              application/json:
+                schema:
+                  type: object
+                  additionalProperties: false
+                  required:
+                    - users
+                  properties:
+                    users:
+                      type: array
+                      items: {}
+          409:
+            description: Conflict
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/FailResponse'
+          500:
+            description: Internal Server Error
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/FailResponse'
+    /user/{id}:
+      get:
+        summary: Get single user
+        tags:
+          - user
+        operationId: getUser
+        parameters:
+          - name: id
+            in: path
+            description: User ID
+            required: true
+            schema:
+              type: string
+              pattern: '^[0-9a-fA-F]{24}$'
+        responses:
+          200:
+            description: Success
+            content:
+              application/json:
+                schema:
+                  type: object
+                  additionalProperties: false
+                  required:
+                    - user
+                  properties:
+                    user:
+                      type: object
+          409:
+            description: Conflict
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/FailResponse'
+          500:
+            description: Internal Server Error
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/FailResponse'
+      patch:
+        summary: Update user
+        tags:
+          - user
+        operationId: updateUser
+        parameters:
+          - name: id
+            in: path
+            description: User ID
+            required: true
+            schema:
+              type: string
+              pattern: '^[0-9a-fA-F]{24}$'
+        responses:
+          200:
+            description: Success
+            content:
+              application/json:
+                schema:
+                  type: object
+                  additionalProperties: false
+                  required:
+                    - user
+                  properties:
+                    user:
+                      type: object
+          409:
+            description: Conflict
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/FailResponse'
+          500:
+            description: Internal Server Error
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/FailResponse'
+      delete:
+        summary: Delete user
+        tags:
+          - user
+        operationId: deleteUser
+        parameters:
+          - name: id
+            in: path
+            description: User ID
+            required: true
+            schema:
+              type: string
+              pattern: '^[0-9a-fA-F]{24}$'
+        responses:
+          204:
+            description: Success
+          409:
+            description: Conflict
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/FailResponse'
+          500:
+            description: Internal Server Error
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/FailResponse'
+    /shift:
+      post:
+        summary: Create shift
+        tags:
+          - shift
+        operationId: createShift
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - cleaner
+                  - client
+                  - date
+                  - hours
+                  - amount
+                properties:
+                  cleaner:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        pattern: '^[0-9a-fA-F]{24}$'
+                      name:
+                        type: string
+                  client:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        pattern: '^[0-9a-fA-F]{24}$'
+                      name:
+                        type: string
+                      email:
+                        type: string
+                      phone:
+                        type: string
+                      address:
+                        type: object
+                        properties:
+                          street:
+                            type: string
+                          city:
+                            type: string
+                          postcode:
+                            type: string
+                  date:
+                    type: string
+                    format: date-time
+                  hours:
+                    type: number
+                  amount:
+                    type: number
+                  paid:
+                    type: boolean
+                  paymentDate:
+                    type: string
+                    format: date-time
+                    nullable: true
+                  paymentMethod:
+                    type: string
+                    enum:
+                      - cash
+                      - bank
+                      - admin
+                  commission:
+                    type: number
+                  notes:
+                    type: string
+        responses:
+          201:
+            description: Success
+            content:
+              application/json:
+                schema:
+                  type: object
+                  additionalProperties: false
+                  required:
+                    - shiftId
+                  properties:
+                    userId:
+                      type: string
+          409:
+            description: Conflict
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/FailResponse'
+          500:
+            description: Internal Server Error
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/FailResponse'
+      get:
+        summary: Get all shifts
+        tags:
+          - shift
+        operationId: getShifts
+        responses:
+          200:
+            description: Success
+            content:
+              application/json:
+                schema:
+                  type: object
+                  additionalProperties: false
+                  required:
+                    - shifts
+                  properties:
+                    users:
+                      type: array
+                      items: {}
+          409:
+            description: Conflict
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/FailResponse'
+          500:
+            description: Internal Server Error
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/FailResponse'
+    /shift/{id}:
+      get:
+        summary: Get single shift
+        tags:
+          - shift
+        operationId: getShift
+        parameters:
+          - name: id
+            in: path
+            description: Shift ID
+            required: true
+            schema:
+              type: string
+              pattern: '^[0-9a-fA-F]{24}$'
+        responses:
+          200:
+            description: Success
+            content:
+              application/json:
+                schema:
+                  type: object
+                  additionalProperties: false
+                  required:
+                    - shift
+                  properties:
+                    user:
+                      type: object
+          409:
+            description: Conflict
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/FailResponse'
+          500:
+            description: Internal Server Error
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/FailResponse'
+      patch:
+        summary: Update shift
+        tags:
+          - shift
+        operationId: updateShift
+        parameters:
+          - name: id
+            in: path
+            description: Shift ID
+            required: true
+            schema:
+              type: string
+              pattern: '^[0-9a-fA-F]{24}$'
+        responses:
+          200:
+            description: Success
+            content:
+              application/json:
+                schema:
+                  type: object
+                  additionalProperties: false
+                  required:
+                    - shift
+                  properties:
+                    user:
+                      type: object
+          409:
+            description: Conflict
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/FailResponse'
+          500:
+            description: Internal Server Error
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/FailResponse'
+      delete:
+        summary: Delete shift
+        tags:
+          - shift
+        operationId: deleteShift
+        parameters:
+          - name: id
+            in: path
+            description: Shift ID
+            required: true
+            schema:
+              type: string
+              pattern: '^[0-9a-fA-F]{24}$'
+        responses:
+          204:
+            description: Success
+          409:
+            description: Conflict
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/FailResponse'
+          500:
+            description: Internal Server Error
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/FailResponse'
+    /shift/summary:
+      post:
+        summary: Shift summary
+        tags:
+          - shift
+        operationId: shiftSummary
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  from:
+                    type: string
+                    format: date-time
+                  to:
+                    type: string
+                    format: date-time
+                  cleaner:
+                    type: string
+                    pattern: '^[0-9a-fA-F]{24}$'
+                  client:
+                    type: string
+                    pattern: '^[0-9a-fA-F]{24}$'
+                    anyOf:
+                    - required: [from]
+                    - required: [to]
+                    - required: [from, to]
+                    - required: [cleaner]
+                    - required: [client]
+                    - required: [cleaner, client]
+        responses:
+          201:
+            description: Success
+            content:
+              application/json:
+                schema:
+                  type: object
+                  additionalProperties: false
+                  required:
+                    - shiftId
+                  properties:
+                    userId:
+                      type: string
+          409:
+            description: Conflict
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/FailResponse'
+          500:
+            description: Internal Server Error
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/FailResponse'
+    /session:
+      post:
+        summary: Create session
+        tags:
+          - session
+        operationId: createSessionHandler
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - email
+                  - password
+                properties:
+                  email:
+                    type: string
+                    format: email
+                  password:
+                    type: string
+                    format: password
+                  name:
+                    type: string
+        responses:
+          201:
+            description: Success
+            content:
+              application/json:
+                schema:
+                  type: object
+                  additionalProperties: false
+                  required:
+                    - accessToken
+                    - refreshToken
+                  properties:
+                    accessToken:
+                      type: string
+                    refreshToken:
+                      type: string
+          401:
+            description: Conflict
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/FailResponse'
+          409:
+            description: Conflict
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/FailResponse'
+          500:
+            description: Internal Server Error
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/FailResponse'
+      get:
+        summary: Get all sessions for a user
+        tags:
+          - session
+        operationId: getSessionsHandler
+        responses:
+          200:
+            description: Success
+            content:
+              application/json:
+                schema:
+                  type: object
+                  additionalProperties: false
+                  required:
+                    - sessions
+                  properties:
+                    sessions:
+                      type: array
+                      items: {}
+          401:
+            description: Not authorized
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/NotAutorizedResponse'
+          409:
+            description: Conflict
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/FailResponse'
+          500:
+            description: Internal Server Error
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/FailResponse'
+      delete:
+        summary: Delete session
+        tags:
+          - shift
+        operationId: deleteSessionHandler
+        responses:
+          204:
+            description: Success
+            content:
+              application/json:
+                schema:
+                  type: object
+                  additionalProperties: false
+                  required:
+                    - accessToken
+                    - refreshToken
+                  properties:
+                    accessToken:
+                      type: string
+                      nullable: true
+                    refreshToken:
+                      type: string
+                      nullable: true
+          401:
+            description: Not authorized
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/NotAutorizedResponse'
+          409:
+            description: Conflict
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/FailResponse'
+          500:
+            description: Internal Server Error
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/FailResponse'
+                  
+  components:
+    securitySchemes:
+      bearerAuth:
+        type: http
+        scheme: bearer
+        bearerFormat: JWT
+    schemas:
+      HelloResponse:
+        type: object
+        additionalProperties: false
+        required:
+          - message
+        properties:
+          message:
+            type: string
+      FailResponse:
+        type: object
+        additionalProperties: false
+        required:
+          - success
+          - error
+        properties:
+          success:
+            type: boolean
+          error:
+            type: string
+      NotAutorizedResponse:
+        type: object
+        additionalProperties: false
+        required:
+          - error
+        properties:
+          error:
+            type: string
