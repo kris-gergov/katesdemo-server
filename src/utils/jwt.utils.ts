@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import config from '@config/index';
+import config from '../config';
 
 const privateKey = config.privateKey.replace(/\\n/gm, '\n');
 const publicKey = config.publicKey.replace(/\\n/gm, '\n');

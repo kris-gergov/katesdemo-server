@@ -1,6 +1,6 @@
 import { faker } from '@faker-js/faker';
 
-import config from '@config/index';
+import config from '../config';
 import { signJwt } from '@utils/jwt.utils';
 import User from '@models/user';
 

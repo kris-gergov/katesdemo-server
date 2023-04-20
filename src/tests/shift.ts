@@ -1,10 +1,5 @@
 import { faker } from '@faker-js/faker';
 
-import config from '@config/index';
-import { signJwt } from '@utils/jwt.utils';
-import User, { IUser } from '@models/user';
-import db from '@/utils/db';
-import { ObjectId } from 'mongoose';
 import { DummyUser } from './user';
 
 export type DummyShift = {

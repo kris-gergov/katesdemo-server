@@ -9,8 +9,8 @@ import YAML from 'yamljs';
 import morgan from 'morgan';
 import morganBody from 'morgan-body';
 
-import config from '@config/index';
-import * as api from '@controllers/index';
+import config from '../config';
+import * as api from '../api/controllers';
 import { expressDevLogger } from './express_dev_logger';
 import logger from './logger';
 import deserializeUser from '@middlewares/deserializeUser';
