@@ -1,1 +1,0 @@
-{"version":3,"sources":["../../../src/api/controllers/index.ts"],"sourcesContent":["export * from './greeting';\r\nexport * from './user';\r\n"],"names":[],"mappings":"AAAA;;;;;gDAAc,YAAY;AAA1B,YAAA,SAA2B;;;2CAA3B,SAA2B;;;;mBAA3B,SAA2B;;;EAAA;4CACb,QAAQ;AAAtB,YAAA,KAAuB;;;2CAAvB,KAAuB;;;;mBAAvB,KAAuB;;;EAAA"}
